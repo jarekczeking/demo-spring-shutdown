@@ -16,6 +16,7 @@ import javax.annotation.PreDestroy;
 public class HelloController implements SmartLifecycle {
 	private static final Logger log = LoggerFactory.getLogger(HelloController.class);
 	private volatile boolean backgroundTaskActive;
+	private volatile boolean isStopped;
 
 	@Autowired
 	private ApplicationContext applicationContext;
@@ -65,7 +66,7 @@ public class HelloController implements SmartLifecycle {
 	}
 
 	@GetMapping("/stop")
-	public void stop() {
+	public void stopEndpoint() {
 		new Thread(() -> {
 			System.exit(0);
 		}).start();
@@ -73,7 +74,7 @@ public class HelloController implements SmartLifecycle {
 
 	@Override
 	public boolean isRunning() {
-		return false;
+		return !isStopped;
 	}
 
 	//@PostConstruct
@@ -87,8 +88,16 @@ public class HelloController implements SmartLifecycle {
 
 	@Override
 	public void stop(Runnable callback) {
-		SmartLifecycle.super.stop(callback);
 		log.info("smart lifecycle stop");
+		new Thread(() -> {
+			isStopped = true;
+			callback.run();
+		}).start();
+	}
+
+	@Override
+	public void stop() {
+		throw new IllegalArgumentException("use stop(callback)");
 	}
 
 	@PreDestroy
