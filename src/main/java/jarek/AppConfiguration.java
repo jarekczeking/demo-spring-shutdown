@@ -11,12 +11,15 @@ public class AppConfiguration {
     private static final Logger log = LoggerFactory.getLogger(AppConfiguration.class);
 
     @Bean
-    public SmartLifecycle shutdownTaskWithHelper() {
+    public SmartLifecycle shutdownTaskWithHelper(BusySingleton busySingleton) {
         return new GracefulShutdownSmartLifecycle() {
             @Override
             public void shutdownTask() {
                 log.info("another task");
+                log.info("Let's wait until not busy");
+                busySingleton.waitTillFree();
             }
         };
     }
+
 }
